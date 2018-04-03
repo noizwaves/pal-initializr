@@ -1,0 +1,9 @@
+rootProject.name = '{{artifactId}}'
+
+include "applications:{{artifactId}}-server"
+{{#isWeb}}
+include "components:{{artifactId}}-library"
+{{/isWeb}}
+{{#hasFlyway}}
+include "databases:{{artifactId}}-database"
+{{/hasFlyway}}

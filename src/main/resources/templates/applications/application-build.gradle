@@ -1,0 +1,30 @@
+apply plugin: "org.springframework.boot"
+
+version = '{{version}}'
+dependencies {
+{{#isWeb}}
+    compile project(":components:{{artifactId}}-library")
+
+{{/isWeb}}
+{{#compileDependencies}}
+    compile('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+{{/compileDependencies}}
+{{#groovy}}
+    compile('org.codehaus.groovy:groovy')
+{{/groovy}}
+{{#kotlin}}
+    compile("org.jetbrains.kotlin:{{kotlinStdlibArtifactId}}{{^kotlinSupport}}:${kotlinVersion}{{/kotlinSupport}}")
+    compile("org.jetbrains.kotlin:kotlin-reflect{{^kotlinSupport}}:${kotlinVersion}{{/kotlinSupport}}")
+{{/kotlin}}
+{{#runtimeDependencies}}
+    runtime('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+{{/runtimeDependencies}}
+{{#compileOnlyDependencies}}
+    compileOnly('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+{{/compileOnlyDependencies}}
+{{#providedDependencies}}
+    providedRuntime('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+{{/providedDependencies}}
+
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}

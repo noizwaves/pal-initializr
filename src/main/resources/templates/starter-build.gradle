@@ -1,0 +1,101 @@
+buildscript {
+	ext {
+		{{#buildPropertiesGradle}}
+		{{key}} = '{{value}}'
+		{{/buildPropertiesGradle}}
+		{{#isWeb}}
+		springVersion = '4.3.13.RELEASE'
+		{{/isWeb}}
+	}
+	repositories {
+		mavenCentral()
+		{{^isRelease}}
+		maven { url "https://repo.spring.io/snapshot" }
+		maven { url "https://repo.spring.io/milestone" }
+		{{/isRelease}}
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		{{^bootOneThreeAvailable}}
+		classpath('io.spring.gradle:dependency-management-plugin:{{dependencyManagementPluginVersion}}')
+		{{/bootOneThreeAvailable}}
+		{{#kotlin}}
+		classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
+		classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
+		{{/kotlin}}
+	}
+}
+
+repositories {
+	mavenCentral()
+	{{#repositoryValues}}
+	maven { url "{{value.url}}" }
+	{{/repositoryValues}}
+}
+
+
+subprojects {
+
+	apply plugin: '{{language}}'
+	{{#kotlin}}
+	apply plugin: 'kotlin-spring'
+	{{/kotlin}}
+	{{#war}}
+	apply plugin: 'eclipse-wtp'
+	{{/war}}
+	{{#war}}
+	apply plugin: 'war'
+	{{/war}}
+	defaultTasks "clean", "build"
+
+	group = '{{groupId}}'
+	sourceCompatibility = {{javaVersion}}{{#kotlin}}{{#java8OrLater}}
+	compileKotlin {
+		kotlinOptions.jvmTarget = "1.8"
+	}
+	compileTestKotlin {
+		kotlinOptions.jvmTarget = "1.8"
+	}{{/java8OrLater}}{{/kotlin}}
+
+	repositories {
+		mavenCentral()
+		{{#repositoryValues}}
+		maven { url "{{value.url}}" }
+		{{/repositoryValues}}
+	}
+
+	{{#providedDependencies}}
+	configurations {
+		providedRuntime
+	}
+	{{/providedDependencies}}
+
+	{{^buildPropertiesVersions.empty}}
+	ext {
+		{{#buildPropertiesVersions}}
+		{{key}} = '{{value}}'
+	{{/buildPropertiesVersions}}
+	}
+
+	{{/buildPropertiesVersions.empty}}
+	dependencies {
+		compile "org.slf4j:slf4j-api:1.7.10"
+		testCompile "junit:junit:4.12"
+		testCompile "org.mockito:mockito-core:2.2.26"
+		testCompile "org.assertj:assertj-core:3.8.0"
+		{{#testDependencies}}
+		testCompile('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+		{{/testDependencies}}
+	}
+}
+
+{{#hasBoms}}
+
+dependencyManagement {
+	imports {
+		{{#reversedBoms}}
+		mavenBom "{{groupId}}:{{artifactId}}:{{versionToken}}"
+		{{/reversedBoms}}
+	}
+}
+{{/hasBoms}}

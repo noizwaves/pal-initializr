@@ -1,0 +1,4 @@
+dependencies {
+    compile "org.springframework:spring-web:$springVersion"
+    compile "javax.servlet:javax.servlet-api:3.0.1"
+}

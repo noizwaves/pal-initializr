@@ -1,0 +1,48 @@
+import org.flywaydb.gradle.FlywayExtension
+import org.flywaydb.gradle.task.FlywayCleanTask
+import org.flywaydb.gradle.task.FlywayMigrateTask
+
+plugins {
+    id "org.flywaydb.flyway" version "4.0.3"
+}
+
+apply from: "../db.gradle"
+apply plugin: "org.springframework.boot"
+
+bootRepackage {
+    enabled = false
+}
+
+dependencies {
+    compile('com.h2database:h2')
+{{#databaseDependencies}}
+    compile('{{groupId}}:{{artifactId}}{{#version}}:{{version}}{{/version}}{{#type}}@{{type}}{{/type}}')
+{{/databaseDependencies}}
+}
+
+flyway {
+    url = getDatabaseUrl("{{artifactId_underscored}}")
+    user = getDatabaseUser()
+    outOfOrder = false
+}
+
+task cfMigrate(type: FlywayMigrateTask) {
+    if (System.env.CF_MIGRATE) {
+        extension = setupProdFlywayExtension(new FlywayExtension(), "{{artifactId}}-server")
+        extension.setTable("{{artifactId}}_schema_version")
+        extension.setBaselineOnMigrate(true)
+        extension.setBaselineVersion("0")
+    }
+}
+
+task testMigrate(type: FlywayMigrateTask) {
+    extension = new FlywayExtension()
+    extension.url = getDatabaseUrl("{{artifactId_underscored}}_test")
+    extension.user = getDatabaseUser()
+}
+
+task testClean(type: FlywayCleanTask) {
+    extension = new FlywayExtension()
+    extension.url = getDatabaseUrl("{{artifactId_underscored}}_test")
+    extension.user = getDatabaseUser()
+}

@@ -1,0 +1,49 @@
+import groovy.json.JsonSlurper
+
+ext.getDatabaseUser = {
+    def user = System.getenv("SPRING_DATASOURCE_USERNAME")
+    if (user == null) {
+        println("WARNING: SPRING_DATABASE_USERNAME is not defined");
+    }
+    return user
+}
+
+ext.getDatabaseUrl = { databaseName ->
+    return "jdbc:h2:$rootDir/LOCAL-DB/$databaseName{{#h2CompatibilityMode}};MODE={{h2CompatibilityMode}}{{/h2CompatibilityMode}}"
+}
+
+ext.setupProdFlywayExtension = { extension, cfAppName ->
+    try {
+        def process = "cf env $cfAppName".execute()
+        def rawText = process.text
+
+        process.waitFor()
+
+        if (process.exitValue() != 0) {
+            return extension
+        }
+
+        def vcapServices = new JsonSlurper().parseText(
+            rawText
+                .replace("\n", "")
+                .split("System-Provided:")[1]
+                .split("VCAP_APPLICATION")[0][0..-4]
+        )["VCAP_SERVICES"]
+
+        //noinspection GroovyAssignabilityCheck
+        def sqlCredentials = vcapServices?.getAt("{{artifactId}}-database")?.getAt(0)?.getAt("credentials")
+
+        if (sqlCredentials != null) {
+            def user = sqlCredentials["username"]
+            def password = sqlCredentials["password"]
+            def url = sqlCredentials["jdbcUrl"]?.tokenize('?')?.get(0)
+
+            extension.user = user
+            extension.password = password
+            extension.url = url
+        }
+    } catch (Throwable oops) {
+        println oops
+    }
+    return extension
+}

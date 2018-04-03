@@ -14,7 +14,10 @@ Spring Initializr based project generation observing PAL opinions.
     1. `./mvnw clean install`
     1. `.cd`
 
-## Building
+## Building & running locally
 
 1. Install above dependencies
-1. 
+1. `cd ~/workspace`
+1. `git clone git@github.com:noizwaves/pal-initializr.git`
+1. `cd pal-initializr`
+1. `./gradlew bootRun`
