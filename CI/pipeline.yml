@@ -17,18 +17,16 @@ resources:
 - name: version
   type: semver
   source:
-    endpoint: {{aws-endpoint}}
     bucket: {{aws-bucket}}
-    key: versions/current-version
+    key: pal-intializr/versions/current-version
     access_key_id: ((aws-access-key-id))
     secret_access_key: ((aws-secret-access-key))
 
 - name: artifact-pal-initializr
   type: s3
   source:
-    endpoint: {{aws-endpoint}}
     bucket: {{aws-bucket}}
-    regexp: builds/pal-initializr-(.*).jar
+    regexp: pal-intializr/builds/pal-initializr-(.*).jar
     access_key_id: ((aws-access-key-id))
     secret_access_key: ((aws-secret-access-key))
 
