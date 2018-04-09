@@ -1,0 +1,23 @@
+github-initializr-repository: git@github.com:noizwaves/initializr.git
+github-initializr-branch: enhanced-customization
+github-initializr-private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  REPLACE WITH YOUR PRIVATE KEY HERE
+  -----END RSA PRIVATE KEY-----
+github-pal-initializr-repository: git@github.com:noizwaves/pal-initializr.git
+github-pal-initializr-branch: master
+github-pal-initializr-private-key: |
+  -----BEGIN RSA PRIVATE KEY-----
+  REPLACE WITH YOUR PRIVATE KEY HERE
+  -----END RSA PRIVATE KEY-----
+
+cf-api: api.run.pivotal.io
+cf-username: TODO
+cf-password: TODO
+cf-organization: TODO
+cf-space: TODO
+
+aws-endpoint: TODO
+aws-access-key-id: TODO
+aws-secret-access-key: TODO
+aws-bucket: TODO

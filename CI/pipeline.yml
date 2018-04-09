@@ -1,0 +1,109 @@
+---
+resources:
+- name: initializr
+  type: git
+  source:
+    uri: {{github-initializr-repository}}
+    branch: {{github-initializr-branch}}
+    private_key: {{github-initializr-private-key}}
+
+- name: pal-initializr
+  type: git
+  source:
+    uri: {{github-pal-initializr-repository}}
+    branch: {{github-pal-initializr-branch}}
+    private_key: {{github-pal-initializr-private-key}}
+
+- name: version
+  type: semver
+  source:
+    endpoint: {{aws-endpoint}}
+    bucket: {{aws-bucket}}
+    key: versions/current-version
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
+
+- name: artifact-pal-initializr
+  type: s3
+  source:
+    endpoint: {{aws-endpoint}}
+    bucket: {{aws-bucket}}
+    regexp: builds/pal-initializr-(.*).jar
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
+
+- name: cf-prod
+  type: cf
+  source:
+    api: {{cf-api}}
+    username: ((cf-username))
+    password: ((cf-password))
+    organization: {{cf-organization}}
+    space: {{cf-space}}
+
+jobs:
+- name: build
+  plan:
+  - get: initializr
+    trigger: true
+  - get: pal-initializr
+    trigger: true
+  - get: version
+    params:
+      bump: patch
+  - task: build and test
+    config:
+      platform: linux
+
+      image_resource:
+        type: docker-image
+        source:
+          repository: platformaccelerationlab/pal-ci
+
+      inputs:
+        - name: initializr
+        - name: pal-initializr
+        - name: version
+
+      outputs:
+      - name: build-output
+
+      run:
+        path: bash
+        args:
+        - -exc
+        - |
+
+          set -e
+
+          # 1. Build and install `initializr`
+          cd initializr
+          ./mvnw clean install
+          cd ..
+
+          # 2. Build `pal-initializr`
+          cd pal-initializr
+          ./gradlew build jar
+          cd ..
+
+          cp pal-initializr/build/libs/pal-initializr-*.jar ./build-output/pal-initializr-`cat version/number`.jar
+  - put: artifact-pal-initializr
+    params:
+      file: build-output/pal-initializr-*.jar
+  - put: version
+    params:
+      file: version/number
+
+- name: deploy-pal-initializr
+  plan:
+  - get: pal-initializr
+    passed: [build]
+    trigger: true
+  - get: artifact-pal-initializr
+    passed: [build]
+    trigger: true
+  - put: cf-prod
+    params:
+      manifest: pal-initializr/manifest.yml
+      path: artifact-pal-initializr/pal-initializr-*.jar
+      current_app_name: pal-initializr-adam
